@@ -129,6 +129,87 @@ correctness.
 
 ---
 
+## 2026-07-17 — Session 4: Phase 3 frontend
+
+**Model:** Claude Sonnet 5, via Claude Code (VS Code extension).
+
+**Asked for:** the Next.js frontend — shorten form and dashboard screens,
+with real loading/error states, per `docs/architecture.md`'s frontend
+structure section.
+
+**What happened:** before writing any frontend code, the AI re-read the
+backend routes and `docs/architecture.md` and caught a gap: the
+architecture doc already promised the dashboard "fetches the list of
+created URLs," but no endpoint existed to produce that list — only
+per-code stats. Rather than build the dashboard against an endpoint that
+didn't exist (or fake it with browser `localStorage`, which would break if
+opened from a different machine — a real risk for a reviewer testing the
+submission), the AI added `GET /api/urls` to the backend first (same
+API-key dependency as `/api/stats/{code}`, reuses `StatsResponse`), with
+its own tests, before touching the frontend. It also added a `short_url`
+field to `StatsResponse` for the same reason — the dashboard needs a
+clickable link per row, and reconstructing it from a second public env var
+on the frontend would have duplicated logic the backend already owns.
+
+Scaffolded the Next.js app via `create-next-app`, then stripped the
+template boilerplate (Geist fonts, sample landing page, unused SVGs,
+generated `AGENTS.md`/`CLAUDE.md`) rather than building on top of it. Chose
+plain CSS over Tailwind — the app is two screens, not enough surface to
+justify a build-tool dependency. Built `lib/backend.ts` as the single place
+that reads `BACKEND_API_KEY` (guarded by the `server-only` package so a
+future accidental client import fails at build time, not silently), used
+by two route handlers (`app/api/shorten`, `app/api/urls`) that proxy to the
+backend — this is the pattern `technical-decisions.md` specified so the key
+never reaches the browser.
+
+**Accepted:**
+
+- The `refreshKey`-counter pattern in `UrlsTable.tsx` (bump a number in the
+  refresh button's click handler, effect depends on it and re-fetches) over
+  an extracted `useCallback` fetch function called from both the effect and
+  the button. `eslint-plugin-react-hooks` v7 (bundled with Next 16's default
+  config) has a `set-state-in-effect` rule that flags *any* function called
+  from inside a `useEffect` if that function's body contains a `setState`
+  call anywhere — including after an `await`, not just before it. An
+  async IIFE written directly inside the effect body passes the rule; a
+  named function referenced from the effect does not, even with identical
+  runtime behavior. Verified this empirically by trying both shapes and
+  running `npm run lint`. The counter pattern gave a single fetch
+  implementation that satisfies the rule without duplicating the fetch
+  logic between mount and refresh.
+- Full functional verification against the real running stack rather than
+  trusting the build alone: started both servers, drove the create →
+  duplicate-dedup → invalid-URL-rejected → redirect → click-increment →
+  list-refresh flow end-to-end through the frontend's own proxy routes with
+  `curl`, confirmed `npm run lint`, `npx tsc --noEmit`, and `npm run build`
+  all pass clean, then re-ran the full pytest suite (24 tests) after the
+  backend schema change.
+
+**Corrected/caught during review:**
+
+- First lint pass flagged two `<a href="/...">` internal links (nav bar,
+  dashboard empty-state link) — `@next/next/no-html-link-for-pages` wants
+  `next/link` for same-app navigation. Fixed both; left the short-URL links
+  in the dashboard table as plain `<a target="_blank">` since those point
+  at the backend's redirect endpoint, not an internal Next.js route.
+- The first version of `UrlsTable`'s effect called `setLoading(true)`
+  synchronously as the first line of the function it invoked — flagged by
+  the rule described above. Rewrote per the accepted approach rather than
+  suppressing the lint rule, since the fix was a genuine simplification
+  (one fetch implementation instead of two), not just lint-appeasement.
+
+**Rejected/deferred:** No visual/browser screenshot verification — this
+environment has no browser automation tool available, so the frontend was
+verified functionally (curl against the live dev server, SSR HTML output
+inspected for both routes) and by a clean production build, not by eye.
+Flagged this limitation explicitly rather than claiming a visual check that
+didn't happen.
+
+**Next:** Phase 4 — documentation (backend README/API docs, root setup
+guide, finalize this log's model-choice rationale).
+
+---
+
 ## Model-choice rationale
 
 *(To be finalized in Phase 4 once the full session history is in. Current
