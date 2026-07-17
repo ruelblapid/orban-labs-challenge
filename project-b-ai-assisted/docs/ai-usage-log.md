@@ -210,10 +210,89 @@ guide, finalize this log's model-choice rationale).
 
 ---
 
+## 2026-07-17 — Session 5: Phase 4 documentation
+
+**Model:** Claude Sonnet 5, via Claude Code (VS Code extension).
+
+**Asked for:** `backend/README.md` (API summary, auth, pointer to `/docs`),
+a root-level setup guide at `project-b-ai-assisted/README.md`, an overview
+README at the repo root covering both projects, and finalizing this log's
+model-choice rationale — then running the pre-submission validator.
+
+**What happened:** the AI read every backend route/schema/config file
+first to make sure the endpoint table and env-var docs matched the actual
+code rather than the earlier planning docs (which predate the `GET
+/api/urls` addition from Phase 3). It then verified the setup guide instead
+of just writing it: ran the full pytest suite (23 passed) to get an
+accurate test count, started `uvicorn` on a scratch port and curled
+`/health` and `/docs` to confirm the documented commands actually boot the
+server, and ran `npm run build` to confirm the frontend commands still
+produce a clean production build. For the repo-root `README.md`, it wrote
+only a structural overview (what's where, how the two projects differ in
+process) and explicitly avoided describing Project A's implementation,
+since Project A must contain zero AI-generated content and hasn't been
+built yet.
+
+**Accepted:**
+
+- Splitting API documentation into `backend/README.md` (auth + endpoint
+  summary + setup commands) rather than a separate `docs/api.md` — the
+  challenge spec offered either, and keeping it next to the code it
+  documents, alongside the existing `frontend/README.md`, was the more
+  discoverable placement.
+- Testing the setup guide by actually executing it (fresh `uvicorn`
+  process on an unused port, `npm run build`) instead of only proof-reading
+  it — this caught nothing wrong this time, but "I read it and it looks
+  right" isn't the same claim as "I ran it and it worked," and the
+  challenge explicitly asks for the guide to be tested.
+
+**Corrected/caught during review:** the first attempt to boot a scratch
+`uvicorn` instance for the setup-guide check collided with an
+already-listening process on the chosen port (`8123`) — a leftover from
+earlier in this environment, not something the AI started. Reran on a
+different port (`8791`) rather than killing an unfamiliar process it didn't
+start, since a foreign listener on that port wasn't something to assume was
+safe to terminate.
+
+**Next:** Phase 5 — run `scripts/check_submission.py` and act on anything it
+flags, then hand off to the user for the manual checklist (repo visibility,
+transcript export, form submission).
+
+---
+
 ## Model-choice rationale
 
-*(To be finalized in Phase 4 once the full session history is in. Current
-model in use: Claude Sonnet 5 via Claude Code — chosen for strong multi-step
-agentic coding across a multi-file repo, ability to keep repo-wide context
-across a long session, and straightforward transcript export for the
-`/prompts/` requirement.)*
+**Model used throughout:** Claude Sonnet 5, via Claude Code (VS Code
+extension), for every session — planning, backend, tests, frontend, and
+documentation.
+
+**Why this model:**
+
+- **Agentic, multi-file coding.** The backend alone spans six modules
+  (`config`, `db`, `auth`, `schemas`, `urls`, four route files) plus a test
+  suite and two frontend route handlers — work that needs a model that can
+  hold repo-wide context across a session and make consistent choices
+  (e.g. the same error-shape and status-code conventions in every route)
+  without re-explaining the architecture each time.
+- **Willingness to catch and fix its own gaps, not just generate code.**
+  Concrete example: in Phase 3, the model noticed mid-session that the
+  architecture doc promised a dashboard list endpoint that didn't exist yet,
+  and built it before writing frontend code against a fiction — behavior
+  that mattered more here than raw code-generation speed.
+- **Runs as a CLI/IDE tool, not a chat window**, so it can execute the
+  actual verification commands (`pytest`, `uvicorn`, `npm run build`,
+  `npm run lint`) itself and report real output, rather than producing code
+  that was never run. Every session in this log includes evidence of
+  something actually executed, not just written.
+- **Native transcript export** satisfies the `/prompts/` requirement
+  directly — the session log is the artifact, not a reconstruction after
+  the fact.
+
+**What I corrected or overrode along the way** (see individual sessions
+above for detail): the first-draft `long_url` field type in Phase 1
+(`HttpUrl` vs plain `str` for correct status-code separation), a
+lint-driven data-fetching pattern in Phase 3 that needed empirical
+verification rather than trusting the first shape offered, and — in this
+session — not assuming a foreign process on a test port was safe to kill.
+No session in this project was "accept everything the model produced
+without checking"; the corrections above are the evidence.
