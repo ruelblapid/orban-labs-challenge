@@ -2,7 +2,7 @@ from fastapi import FastAPI
 
 from app.config import settings
 from app.db import init_db
-from app.routes import shorten
+from app.routes import redirect, shorten
 
 app = FastAPI(
     title="Project B — URL Shortener",
@@ -22,3 +22,8 @@ def _startup() -> None:
 @app.get("/health", tags=["health"])
 def health_check() -> dict:
     return {"status": "ok"}
+
+
+# Registered last: GET /{short_code} is a single-segment catch-all and must
+# not shadow the more specific routes above (e.g. /health, /api/...).
+app.include_router(redirect.router)
