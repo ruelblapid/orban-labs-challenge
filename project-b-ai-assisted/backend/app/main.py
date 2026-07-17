@@ -2,12 +2,15 @@ from fastapi import FastAPI
 
 from app.config import settings
 from app.db import init_db
+from app.routes import shorten
 
 app = FastAPI(
     title="Project B — URL Shortener",
     description="Shorten long URLs, redirect short codes, and track clicks.",
     version="0.1.0",
 )
+
+app.include_router(shorten.router)
 
 
 @app.on_event("startup")
