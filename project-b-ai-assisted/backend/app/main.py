@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 
 from app.config import settings
+from app.db import init_db
 
 app = FastAPI(
     title="Project B — URL Shortener",
@@ -10,8 +11,9 @@ app = FastAPI(
 
 
 @app.on_event("startup")
-def _validate_config() -> None:
+def _startup() -> None:
     settings.require_api_key()
+    init_db()
 
 
 @app.get("/health", tags=["health"])
