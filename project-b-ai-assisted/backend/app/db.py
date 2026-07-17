@@ -71,6 +71,13 @@ def insert_url(short_code: str, long_url: str, expires_at: str | None) -> sqlite
         ).fetchone()
 
 
+def list_urls() -> list[sqlite3.Row]:
+    with get_connection() as conn:
+        return conn.execute(
+            "SELECT * FROM urls ORDER BY created_at DESC, id DESC"
+        ).fetchall()
+
+
 def increment_clicks(short_code: str) -> sqlite3.Row | None:
     """Atomic single-statement increment (no read-modify-write race), then
     returns the updated row in the same statement via RETURNING."""

@@ -25,8 +25,15 @@ scope doesn't warrant them.
 | POST   | `/api/shorten`              | Required            | Create a short code for a long URL         | `201` new / `200` existing (dedup) | `400` invalid URL, `401` missing/bad key, `422` malformed body |
 | GET    | `/{short_code}`              | Public               | Resolve a short code and redirect          | `307` redirect      | `404` unknown code, `410` expired code |
 | GET    | `/api/stats/{short_code}`   | Required            | Return click count + metadata for a code   | `200` with JSON     | `401` missing/bad key, `404` unknown code |
+| GET    | `/api/urls`                 | Required            | List every created URL, newest first, for the dashboard | `200` with JSON array | `401` missing/bad key |
 
 All error responses use FastAPI's default shape: `{"detail": "<message>"}`.
+
+`GET /api/urls` was added during Phase 3 (frontend build): the dashboard
+needs a real list to render, and per-code stats alone can't produce one
+without the frontend guessing codes. It reuses `StatsResponse` per row and
+sits behind the same API-key dependency as `/api/stats/{code}`, since only
+the key holder should see the full set of URLs they've created.
 
 ### `POST /api/shorten`
 
