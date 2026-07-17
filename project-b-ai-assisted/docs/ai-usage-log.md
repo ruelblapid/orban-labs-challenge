@@ -83,6 +83,52 @@ just smoke-tested manually).
 
 ---
 
+## 2026-07-17 — Session 3: Phase 2 backend tests
+
+**Model:** Claude Sonnet 5, via Claude Code (VS Code extension).
+
+**Asked for:** pytest tests in `/tests/` covering the edge cases named in
+`docs/plan.md`'s test strategy section — not smoke tests, the actual
+duplicate/invalid/auth/expiry/click-count cases.
+
+**What happened:** the AI read every backend module first (`config`,
+`auth`, `db`, `schemas`, `urls`, all three routes) rather than guessing at
+behavior, then wrote a `conftest.py` fixture that patches the shared
+`settings` singleton (API key + a per-test temp SQLite path) and yields a
+`TestClient` inside its context manager so the app's startup event
+(`init_db`) actually runs against the temp file. Four test modules:
+`test_shorten.py`, `test_redirect.py`, `test_stats.py`, and
+`test_integration.py` for the round-trip and click-count-under-repeat-hits
+cases the plan called "the test that would actually catch a
+read-then-write race regression." 19 tests, all passing.
+
+**Accepted:**
+
+- Patching attributes directly on the `settings` object instead of
+  environment variables — `Settings()` already ran at import time, so an
+  env-var approach wouldn't reach the already-imported reference every
+  route module holds. Verified this actually isolates tests by running the
+  suite twice and confirming no leftover `.db` file state between runs.
+- `follow_redirects=False` on the TestClient, checking `307` status and the
+  `Location` header directly instead of letting the client chase the
+  redirect — letting it follow would have made a **real outbound network
+  request** to `example.com` for every redirect test, since TestClient only
+  intercepts the app's own ASGI routes, not arbitrary external hosts. Caught
+  this before it became a flaky/slow-test problem rather than after.
+- Seeding the expired-code test directly through `app.db.insert_url()`
+  instead of the public API — `expires_in_days` only accepts a positive
+  (future) value by design, so there's no way to create an already-expired
+  row through `POST /api/shorten` itself.
+
+**Rejected/deferred:** Left the two pre-existing `DeprecationWarning`s
+(`on_event` startup hook, starlette's httpx test-client shim) alone — both
+are Phase 1 code, out of scope for a test-writing session, and don't affect
+correctness.
+
+**Next:** Phase 3 — frontend (Next.js shorten form + dashboard).
+
+---
+
 ## Model-choice rationale
 
 *(To be finalized in Phase 4 once the full session history is in. Current
