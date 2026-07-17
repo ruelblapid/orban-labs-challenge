@@ -1,6 +1,10 @@
 .env
-*.db/*.sqlite
- __pycache__/
+*.db
+*.sqlite
+*.sqlite3
+__pycache__/
+*.pyc
+.pytest_cache/
 .venv
 node_modules/
 .next/
