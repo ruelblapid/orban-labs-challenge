@@ -15,8 +15,14 @@ class ListNotesQueryHandler(QueryHandler[ListNotesQuery]):
         return ListNotesQuery
 
     def handle(self, query: ListNotesQuery) -> QueryResponse:
-        notes = self._note_repository.get_all(limit=query.limit, offset=query.offset)
+        notes = self._note_repository.get_all(
+            query.user_id, limit=query.limit, offset=query.offset
+        )
+        total = self._note_repository.count_all(query.user_id)
 
         return Either.right(
-            QueryListSuccessResult(data=[note.model_dump(mode="json") for note in notes])
+            QueryListSuccessResult(
+                data=[note.model_dump(mode="json") for note in notes],
+                links={"total": total, "limit": query.limit, "offset": query.offset},
+            )
         )

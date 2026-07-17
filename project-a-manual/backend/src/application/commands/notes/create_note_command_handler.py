@@ -33,7 +33,7 @@ class CreateNoteCommandHandler(CommandHandler[CreateNoteCommand]):
             created_at=now,
             updated_at=now,
         )
-        created = self._note_repository.create(note)
+        created = self._note_repository.create(note, command.user_id)
 
         return Either.right(
             CommandSuccessResult(message="Note created", data=created.model_dump(mode="json"))

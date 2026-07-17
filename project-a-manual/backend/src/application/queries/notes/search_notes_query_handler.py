@@ -21,7 +21,9 @@ class SearchNotesQueryHandler(QueryHandler[SearchNotesQuery]):
                 QueryError(code=422, message="Provide a tag or keyword to search by")
             )
 
-        notes = self._note_repository.search(tag=query.tag, keyword=query.keyword)
+        notes = self._note_repository.search(
+            query.user_id, tag=query.tag, keyword=query.keyword
+        )
 
         return Either.right(
             QueryListSuccessResult(data=[note.model_dump(mode="json") for note in notes])

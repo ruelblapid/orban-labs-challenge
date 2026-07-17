@@ -17,7 +17,7 @@ class UpdateNoteCommandHandler(CommandHandler[UpdateNoteCommand]):
         return UpdateNoteCommand
 
     def handle(self, command: UpdateNoteCommand) -> CommandResponse:
-        note = self._note_repository.get_by_id(command.note_id)
+        note = self._note_repository.get_by_id(command.note_id, command.user_id)
         if note is None:
             return Either.left(
                 CommandError(code=404, message="Note not found")
@@ -36,7 +36,7 @@ class UpdateNoteCommandHandler(CommandHandler[UpdateNoteCommand]):
                 "updated_at": datetime.now(timezone.utc),
             }
         )
-        result = self._note_repository.update(updated_note)
+        result = self._note_repository.update(updated_note, command.user_id)
 
         return Either.right(
             CommandSuccessResult(message="Note updated", data=result.model_dump(mode="json"))

@@ -2,6 +2,8 @@
 
 The Notes endpoint lets an authenticated user manage personal notes: create, list, search, retrieve, update, and delete. Every route under `/notes` requires a valid `Authorization: Bearer <token>` header — see [Authentication](../authentication/index.md) for how to obtain one. Requests without a valid token receive `401 Unauthorized`.
 
+Notes are strictly scoped to the authenticated user: list and search only ever return the caller's own notes, and retrieving, updating, or deleting a note that belongs to another user returns `404 Not Found` (the same response as a note that doesn't exist at all, so a request can't be used to probe for the existence of someone else's notes).
+
 ---
 
 ## Features

@@ -16,7 +16,7 @@ class GetNoteByIdQueryHandler(QueryHandler[GetNoteByIdQuery]):
         return GetNoteByIdQuery
 
     def handle(self, query: GetNoteByIdQuery) -> QueryResponse:
-        note = self._note_repository.get_by_id(query.note_id)
+        note = self._note_repository.get_by_id(query.note_id, query.user_id)
         if note is None:
             return Either.left(QueryError(code=404, message="Note not found"))
 

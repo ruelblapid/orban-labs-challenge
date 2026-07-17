@@ -24,6 +24,11 @@ def authenticated_as_new_user(client):
     return {"Authorization": f"Bearer {token}"}
 
 
+@given("I am authenticated as a different user", target_fixture="auth_headers")
+def authenticated_as_a_different_user(client):
+    return authenticated_as_new_user(client)
+
+
 @given(
     parsers.parse('a note titled "{title}" with body "{body}" and tags "{tags}" exists'),
     target_fixture="existing_note",
@@ -113,3 +118,9 @@ def search_notes_without_params(client, auth_headers):
 def response_json_should_contain_note_titled(response, key, title):
     items = response.json().get(key, [])
     assert any(item.get("title") == title for item in items)
+
+
+@then(parsers.parse('the response JSON "{key}" should not contain a note titled "{title}"'))
+def response_json_should_not_contain_note_titled(response, key, title):
+    items = response.json().get(key, [])
+    assert not any(item.get("title") == title for item in items)

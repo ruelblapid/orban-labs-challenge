@@ -35,7 +35,13 @@ Authorization: Bearer <access_token>
       "updated_at": "2026-07-17T09:24:36.597282+00:00"
     }
   ],
-  "links": {},
+  "links": {
+    "total": 1,
+    "limit": 100,
+    "offset": 0
+  },
   "timestamp": "2026-07-17T09:24:36.597282+00:00"
 }
 ```
+
+`links.total` is the total number of notes owned by the user, independent of `limit`/`offset` — use it to compute page count (`ceil(total / limit)`) for pagination.

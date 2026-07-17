@@ -33,10 +33,11 @@ class SqlAlchemyNoteRepository(INoteRepository):
     def __init__(self, session_factory: Callable[[], Session]):
         self._session_factory = session_factory
 
-    def get_all(self, limit: int = 100, offset: int = 0) -> List[Note]:
+    def get_all(self, user_id: UUID, limit: int = 100, offset: int = 0) -> List[Note]:
         with self._session_factory() as session:
             models = (
                 session.query(NoteModel)
+                .filter(NoteModel.user_id == str(user_id))
                 .order_by(NoteModel.created_at.desc())
                 .offset(offset)
                 .limit(limit)
@@ -44,14 +45,26 @@ class SqlAlchemyNoteRepository(INoteRepository):
             )
             return [_to_entity(model) for model in models]
 
-    def get_by_id(self, note_id: UUID) -> Optional[Note]:
+    def count_all(self, user_id: UUID) -> int:
         with self._session_factory() as session:
-            model = session.get(NoteModel, str(note_id))
+            return (
+                session.query(NoteModel).filter(NoteModel.user_id == str(user_id)).count()
+            )
+
+    def get_by_id(self, note_id: UUID, user_id: UUID) -> Optional[Note]:
+        with self._session_factory() as session:
+            model = (
+                session.query(NoteModel)
+                .filter_by(id=str(note_id), user_id=str(user_id))
+                .first()
+            )
             return _to_entity(model) if model else None
 
-    def search(self, tag: Optional[str] = None, keyword: Optional[str] = None) -> List[Note]:
+    def search(
+        self, user_id: UUID, tag: Optional[str] = None, keyword: Optional[str] = None
+    ) -> List[Note]:
         with self._session_factory() as session:
-            query = session.query(NoteModel)
+            query = session.query(NoteModel).filter(NoteModel.user_id == str(user_id))
             if keyword:
                 like_pattern = f"%{keyword}%"
                 query = query.filter(
@@ -63,18 +76,23 @@ class SqlAlchemyNoteRepository(INoteRepository):
                 results = [note for note in results if tag in note.tags]
             return results
 
-    def create(self, note: Note) -> Note:
+    def create(self, note: Note, user_id: UUID) -> Note:
         with self._session_factory() as session:
             model = NoteModel()
             _apply_to_model(model, note)
+            model.user_id = str(user_id)
             session.add(model)
             session.commit()
             session.refresh(model)
             return _to_entity(model)
 
-    def update(self, note: Note) -> Optional[Note]:
+    def update(self, note: Note, user_id: UUID) -> Optional[Note]:
         with self._session_factory() as session:
-            model = session.get(NoteModel, str(note.id))
+            model = (
+                session.query(NoteModel)
+                .filter_by(id=str(note.id), user_id=str(user_id))
+                .first()
+            )
             if model is None:
                 return None
             _apply_to_model(model, note)
@@ -82,9 +100,13 @@ class SqlAlchemyNoteRepository(INoteRepository):
             session.refresh(model)
             return _to_entity(model)
 
-    def delete(self, note_id: UUID) -> bool:
+    def delete(self, note_id: UUID, user_id: UUID) -> bool:
         with self._session_factory() as session:
-            model = session.get(NoteModel, str(note_id))
+            model = (
+                session.query(NoteModel)
+                .filter_by(id=str(note_id), user_id=str(user_id))
+                .first()
+            )
             if model is None:
                 return False
             session.delete(model)

@@ -16,7 +16,7 @@ class DeleteNoteCommandHandler(CommandHandler[DeleteNoteCommand]):
         return DeleteNoteCommand
 
     def handle(self, command: DeleteNoteCommand) -> CommandResponse:
-        deleted = self._note_repository.delete(command.note_id)
+        deleted = self._note_repository.delete(command.note_id, command.user_id)
         if not deleted:
             return Either.left(
                 CommandError(code=404, message="Note not found")
