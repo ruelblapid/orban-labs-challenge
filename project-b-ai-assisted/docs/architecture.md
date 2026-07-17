@@ -71,12 +71,19 @@ Response (`200`):
 ```json
 {
   "short_code": "aZ3kT9x",
+  "short_url": "http://localhost:8000/aZ3kT9x",
   "long_url": "https://example.com/some/page",
   "clicks": 12,
   "created_at": "2026-07-17T10:00:00",
   "expires_at": null
 }
 ```
+
+### `GET /api/urls`
+
+Response (`200`): a JSON array of the same shape as `GET /api/stats/{short_code}`,
+ordered newest-first by `created_at`. Empty array if nothing has been
+created yet.
 
 ## Data model
 

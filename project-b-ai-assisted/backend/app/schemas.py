@@ -31,6 +31,7 @@ class ShortenResponse(BaseModel):
 
 class StatsResponse(BaseModel):
     short_code: str
+    short_url: str
     long_url: str
     clicks: int
     created_at: str

@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 
 from app import db
 from app.auth import require_api_key
+from app.config import settings
 from app.schemas import StatsResponse
 
 router = APIRouter()
@@ -19,6 +20,7 @@ def get_stats(short_code: str) -> StatsResponse:
 
     return StatsResponse(
         short_code=row["short_code"],
+        short_url=f"{settings.base_url}/{row['short_code']}",
         long_url=row["long_url"],
         clicks=row["clicks"],
         created_at=row["created_at"],

@@ -29,3 +29,4 @@ def test_new_url_starts_with_zero_clicks(client, auth_headers):
     assert body["clicks"] == 0
     assert body["short_code"] == short_code
     assert body["long_url"] == "https://example.com/fresh"
+    assert body["short_url"].endswith(f"/{short_code}")
