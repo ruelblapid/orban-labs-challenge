@@ -4,6 +4,7 @@ from fastapi import FastAPI, Request
 from fastapi.encoders import jsonable_encoder
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
+from scalar_fastapi import get_scalar_api_reference
 
 from src.application.providers.container import Container
 from src.infrastructure.db.session import create_all_tables
@@ -30,6 +31,14 @@ app = FastAPI(title="Notes API", version="1.0.0", lifespan=lifespan)
 app.include_router(auth_router.router)
 app.include_router(notes_router.router)
 app.include_router(status_router.router)
+
+
+@app.get("/documentations", include_in_schema=False)
+def scalar_docs():
+    return get_scalar_api_reference(
+        openapi_url=app.openapi_url,
+        title=app.title,
+    )
 
 
 @app.exception_handler(RequestValidationError)

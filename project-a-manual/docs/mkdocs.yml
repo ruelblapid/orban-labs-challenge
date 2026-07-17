@@ -1,0 +1,28 @@
+site_name: Notes API Documentation
+theme:
+       name: material
+nav:
+       - Home: index.md
+       - Authentication:
+                - Overview: endpoints/authentication/index.md
+                - Register: endpoints/authentication/examples/register.md
+                - Login: endpoints/authentication/examples/login.md
+       - Notes:
+                - Overview: endpoints/notes/index.md
+                - Entity: endpoints/notes/entities/index.md
+                - Examples:
+                         - Create Note: endpoints/notes/examples/create.md
+                         - List Notes: endpoints/notes/examples/list.md
+                         - Search Notes: endpoints/notes/examples/search.md
+                         - Retrieve Note: endpoints/notes/examples/retrieve.md
+                         - Update Note: endpoints/notes/examples/update.md
+                         - Delete Note: endpoints/notes/examples/delete.md
+       - Health:
+                - Overview: endpoints/health/index.md
+       - Errors: errors.md
+       - Configurations: configurations/index.md
+markdown_extensions:
+       - admonition
+       - codehilite
+       - toc:
+                permalink: true

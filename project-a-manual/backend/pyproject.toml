@@ -30,12 +30,15 @@ pydantic-settings = "^2.12.0"
 sqlalchemy = "^2.0.36"
 uvicorn = "^0.34.0"
 httpx2 = "^2.7.0"
+scalar-fastapi = "^1.8.2"
 
 [tool.poetry.group.dev.dependencies]
 pylint = "^3.3.3"
 mypy = "^2.2.0"
 isort = "^6.1.0"
 black = "^26.3.1"
+mkdocs = "^1.6.1"
+mkdocs-material = "^9.7.6"
 
 [build-system]
 requires = ["poetry-core"]
